@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/mp-singh/war/models"
+	"github.com/mp-singh/war-game/models"
 	"log"
 	"math/rand"
 )
@@ -10,33 +10,17 @@ func main() {
 	d := models.NewDeck()
 	d.Shuffle()
 
-	p1 := models.Player{Deck: models.Deck{Cards: d.Cards[:26]}}
-	p2 := models.Player{Deck: models.Deck{Cards: d.Cards[26:]}}
+	p1 := models.Player{Name: "Player One", Deck: models.Deck{Cards: d.Cards[:26]}}
+	p2 := models.Player{Name: "Player Two", Deck: models.Deck{Cards: d.Cards[26:]}}
 
 	count := 0
 	for {
-		if p1.Empty() {
-			if len(p1.Discard) == 0 {
-				log.Printf("Player 2 Won in %d iterations!", count)
-				//log.Println(len(p2.Deck.Cards) + len(p2.Discard))
-				break
-			} else {
-				p1.Deck.Cards = p1.Discard
-				p1.Deck.Shuffle()
-				p1.Discard = nil
-			}
+		if p1Won := checkWinCondition(p1, count); p1Won {
+			break
 		}
 
-		if p2.Empty() {
-			if len(p2.Discard) == 0 {
-				log.Printf("Player 1 Won in %d iterations!", count)
-				//log.Println(len(p1.Deck.Cards) + len(p1.Discard))
-				break
-			} else {
-				p2.Deck.Cards = p2.Discard
-				p2.Deck.Shuffle()
-				p2.Discard = nil
-			}
+		if p2Won := checkWinCondition(p2, count); p2Won {
+			break
 		}
 
 		p1Card := p1.Draw()
@@ -46,19 +30,34 @@ func main() {
 			randNum := rand.Intn(2)
 			if randNum == 0 {
 				p1.Discard = append(p1.Discard, []models.Card{p1Card, p2Card}...)
-				log.Println("P1 won round")
+				log.Printf("%s won round!", p1.Name)
 			} else {
 				p2.Discard = append(p2.Discard, []models.Card{p1Card, p2Card}...)
-				log.Println("P2 won round")
+				log.Printf("%s won round!", p2.Name)
 			}
 
 		} else if p1Card.Val > p2Card.Val {
 			p1.Discard = append(p1.Discard, []models.Card{p1Card, p2Card}...)
-			log.Println("P1 won round")
+			log.Printf("%s won round!", p1.Name)
 		} else {
 			p2.Discard = append(p2.Discard, []models.Card{p1Card, p2Card}...)
-			log.Println("P2 won round")
+			log.Printf("%s won round!", p2.Name)
 		}
 		count++
 	}
+}
+
+func checkWinCondition(p models.Player, count int) bool {
+	if p.Empty() {
+		if len(p.Discard) == 0 {
+			log.Printf("%s WON in %d iterations!", p.Name, count)
+			return true
+		} else {
+			p.Deck.Cards = p.Discard
+			p.Deck.Shuffle()
+			p.Discard = nil
+			return false
+		}
+	}
+	return false
 }
